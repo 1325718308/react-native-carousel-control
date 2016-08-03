@@ -1,6 +1,6 @@
 "use strict";
 
-import React, { Component, PropTypes } from "react";
+import React, {Component, PropTypes} from "react";
 import {
     Dimensions,
     StyleSheet,
@@ -12,12 +12,15 @@ import {
 
 import styles from "./styles";
 
-let { width } = Dimensions.get("window");
+let {width} = Dimensions.get("window");
 
 export default class Carousel extends Component {
 
     displayName = "Carousel";
-
+    state = {
+        activePage: 0,
+        paddingTop: 30
+    }
     static propTypes = {
         pageStyle: PropTypes.object,
         pageWidth: PropTypes.number,
@@ -31,8 +34,8 @@ export default class Carousel extends Component {
     static defaultProps = {
         initialPage: 0,
         pageStyle: null,
-        pageWidth: width - 80,
-        sneak: 20,
+        pageWidth: width / 2,
+        sneak: width / 8,
         noItemsText: "Sorry, there are currently \n no items available"
     };
 
@@ -51,48 +54,49 @@ export default class Carousel extends Component {
     }
 
     calculateGap(props) {
-        let { sneak, pageWidth } = props;
+        let {sneak, pageWidth} = props;
         if (pageWidth > width) {
             throw new Error("invalid pageWith");
         }
         /*
          ------------
-        |            |
-        |-   ----   -|
-        | | |    | | |
-        | | |    | | |
-        | | |    | | |
-        |-   ----   -|
-        |^-- sneak   |
-        |         ^--- gap
+         |            |
+         |-   ----   -|
+         | | |    | | |
+         | | |    | | |
+         | | |    | | |
+         |-   ----   -|
+         |^-- sneak   |
+         |         ^--- gap
          ------------
 
-        */
-        let gap = (width - (2 * sneak) - pageWidth) / 2;
+         */
+        let gap = (width - ( sneak * 2) - pageWidth) / 2;
         this.setState({gap: gap});
     }
 
     goToPage(position) {
-        let { pageWidth } = this.props;
-        let { gap } = this.state;
-        let pagePosition = position * (pageWidth + gap);
-        this.scrollView.scrollTo({ y: 0, x: pagePosition });
+        let {pageWidth} = this.props;
+        let {gap} = this.state;
+        let  pagePosition = position * (pageWidth + gap)
+        this.scrollView.scrollTo({y: 0, x: pagePosition});
         this._onPageChange(position);
     }
 
     handleScrollEnd = (e) => {
-        let { pageWidth } = this.props;
-        let { gap } = this.state;
+        let {pageWidth} = this.props;
+        let {gap} = this.state;
         let pageOffset = pageWidth + gap;
         //select page based on the position of the middle of the screen.
         let currentPosition = e.nativeEvent.contentOffset.x + (width / 2);
         let currentPage = ~~(currentPosition / pageOffset);
 
-        this.scrollView.scrollTo({ y: 0, x: currentPage * pageOffset });
+        this.scrollView.scrollTo({y: 0, x: currentPage * pageOffset});
         this._onPageChange(currentPage);
     };
 
     _onPageChange(position) {
+        this.setState({activePage: position})
         if (this.props.onPageChange) {
             let currentElement = this.props.children[position];
             this.props.onPageChange(position, currentElement);
@@ -100,18 +104,22 @@ export default class Carousel extends Component {
     }
 
     render() {
-        let { sneak, pageWidth } = this.props;
-        let { gap } = this.state;
+        let {sneak, pageWidth} = this.props;
+        let {gap} = this.state;
         let computedStyles = StyleSheet.create({
             scrollView: {
                 paddingLeft: sneak + gap / 2,
-                paddingRight: sneak + gap / 2
+                paddingRight: sneak + gap / 2,
+                justifyContent: 'center',
+                paddingTop: 30
             },
             page: {
                 width: pageWidth,
                 justifyContent: "center",
                 marginLeft: gap / 2,
-                marginRight: gap / 2
+                marginRight: gap / 2,
+                alignItems: 'center',
+                height: this.props.childHeight
             }
         });
 
@@ -136,7 +144,9 @@ export default class Carousel extends Component {
                         onPress={ () => this.goToPage(index) }
                     >
                         <View
-                            style={ [ styles.page, computedStyles.page, this.props.pageStyle ] }
+                            style={ [ styles.page, computedStyles.page, this.props.pageStyle,
+                            {height: index===this.state.activePage?this.props.childHeight+50:this.props.childHeight,
+                            margin:index===this.state.activePage?0:25}] }
                         >
                             { c }
                         </View>
@@ -146,7 +156,7 @@ export default class Carousel extends Component {
         }
 
         return (
-            <View style={ styles.container }>
+            <View style={ [styles.container ]}>
                 <ScrollView
                     automaticallyAdjustContentInsets={ false }
                     bounces
