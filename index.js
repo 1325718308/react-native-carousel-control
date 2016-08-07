@@ -78,7 +78,7 @@ export default class Carousel extends Component {
     goToPage(position) {
         let {pageWidth} = this.props;
         let {gap} = this.state;
-        let  pagePosition = position * (pageWidth + gap)
+        let pagePosition = position * (pageWidth + gap)
         this.scrollView.scrollTo({y: 0, x: pagePosition});
         this._onPageChange(position);
     }
@@ -91,8 +91,10 @@ export default class Carousel extends Component {
         let currentPosition = e.nativeEvent.contentOffset.x + (width / 2);
         let currentPage = ~~(currentPosition / pageOffset);
 
-        this.scrollView.scrollTo({y: 0, x: currentPage * pageOffset});
-        this._onPageChange(currentPage);
+        if (currentPage < this.props.children.length) {
+            this.scrollView.scrollTo({y: 0, x: currentPage * pageOffset});
+            this._onPageChange(currentPage);
+        }
     };
 
     _onPageChange(position) {
